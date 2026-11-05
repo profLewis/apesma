@@ -2,6 +2,7 @@
 // APESMA (profLewis): the 🍌 Peach Banana button - back to the house's control panel (its Music page).
 import { useSidebar } from "@/components/ui/sidebar";
 import { apesmaShow, apesmaToPeachBanana } from "@/helpers/apesma";
+import { store } from "@/plugins/store";
 import { computed } from "vue";
 
 const { state, isMobile, setOpenMobile } = useSidebar();
@@ -13,7 +14,7 @@ const go = () => {
 };
 const show = (what: "players" | "search") => {
   if (isMobile.value) setOpenMobile(false);
-  apesmaShow(what);
+  apesmaShow(what, store.activePlayerId);
 };
 </script>
 

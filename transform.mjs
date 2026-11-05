@@ -60,6 +60,8 @@ edit('🍌 button: import', 'src/components/navigation/AppSidebar.vue',
 // 4. ITS NAME in the browser tab
 edit('storage stand-in', 'index.html',   // (the Echo Show's browser refuses localStorage; this session's storage stands in, as the panel itself does)
   '<head>', '<head>\n    <script>try{localStorage.getItem("x")}catch(e){try{Object.defineProperty(window,"localStorage",{configurable:true,get:function(){return window.sessionStorage}})}catch(x){}}</script>', { min: 1, max: 1 });
+edit('house players', 'src/main.ts',   // (inside the panel, "now playing" opens the house's own player - files/src/helpers/apesma_players.ts)
+  'import { installSendspinInterceptor } from "@/plugins/sendspin-connection";', 'import { installSendspinInterceptor } from "@/plugins/sendspin-connection";\nimport "@/helpers/apesma_players";', { min: 1, max: 1 });
 edit('title', 'index.html', /<title>[^<]*<\/title>/, '<title>apesma</title>', { max: 1 });
 
 console.log(report.join('\n'));
