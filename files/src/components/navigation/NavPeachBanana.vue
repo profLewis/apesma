@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // APESMA (profLewis): the 🍌 Peach Banana button - back to the house's control panel (its Music page).
 import { useSidebar } from "@/components/ui/sidebar";
-import { apesmaToPeachBanana } from "@/helpers/apesma";
+import { apesmaShow, apesmaToPeachBanana } from "@/helpers/apesma";
 import { computed } from "vue";
 
 const { state, isMobile, setOpenMobile } = useSidebar();
@@ -10,6 +10,10 @@ const isCollapsed = computed(() => state.value === "collapsed");
 const go = () => {
   if (isMobile.value) setOpenMobile(false);
   apesmaToPeachBanana();
+};
+const show = (what: "players" | "search") => {
+  if (isMobile.value) setOpenMobile(false);
+  apesmaShow(what);
 };
 </script>
 
@@ -23,6 +27,26 @@ const go = () => {
   >
     <span class="ic">🍌</span>
     <span v-if="!isCollapsed" class="tx">Peach Banana</span>
+  </button>
+  <button
+    type="button"
+    class="apesma-pb sub"
+    :class="isCollapsed ? 'mx-auto collapsed' : 'w-full'"
+    title="Your players - the decks and their visualisations"
+    @click="show('players')"
+  >
+    <span class="ic">🎛️</span>
+    <span v-if="!isCollapsed" class="tx">Players</span>
+  </button>
+  <button
+    type="button"
+    class="apesma-pb sub"
+    :class="isCollapsed ? 'mx-auto collapsed' : 'w-full'"
+    title="Your search"
+    @click="show('search')"
+  >
+    <span class="ic">🔍</span>
+    <span v-if="!isCollapsed" class="tx">Search</span>
   </button>
 </template>
 
@@ -41,6 +65,11 @@ const go = () => {
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
+}
+.apesma-pb.sub {
+  border-width: 1px;
+  background: rgba(242, 201, 76, 0.06);
+  font-weight: 600;
 }
 .apesma-pb:hover {
   background: rgba(242, 201, 76, 0.26);

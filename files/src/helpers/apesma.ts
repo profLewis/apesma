@@ -54,3 +54,18 @@ export function apesmaToPeachBanana(): void {
   }
   window.location.href = to;
 }
+
+/** Your own players (the decks + visualisations) or search, from the Peach Banana panel: apesma runs inside the panel's
+ *  apesma page, which lays the house's real Music cards over this app (one copy of each player, here and on the Music
+ *  page). On its own (not inside the panel) it goes to the Music page instead. */
+export function apesmaShow(what: "players" | "search"): void {
+  try {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ apesma: "show", what }, window.location.origin);
+      return;
+    }
+  } catch {
+    /* (not the same site) */
+  }
+  window.location.href = "/control-panel/music";
+}
