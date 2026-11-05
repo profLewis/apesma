@@ -60,9 +60,11 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           pnpm exec vite build --base /local/apesma/
-          cp APESMA_TRANSFORM.txt dist/
-          echo "{\"app\": \"${{ steps.v.outputs.fv }}\", \"built\": \"$(date -u +%FT%TZ)\", \"commit\": \"${{ github.sha }}\"}" > dist/apesma.json
-          cd dist && zip -qr ../../apesma.zip .
+          OUT=$(for d in music_assistant_frontend dist; do [ -f "$d/index.html" ] && echo "$d" && break; done)
+          [ -n "$OUT" ] || { echo "no build output (index.html) found"; exit 1; }
+          cp APESMA_TRANSFORM.txt "$OUT/"
+          echo "{\"app\": \"${{ steps.v.outputs.fv }}\", \"built\": \"$(date -u +%FT%TZ)\", \"commit\": \"${{ github.sha }}\"}" > "$OUT/apesma.json"
+          cd "$OUT" && zip -qr "$GITHUB_WORKSPACE/apesma.zip" .
       - name: Release
         if: steps.v.outputs.skip != '1'
         run: |
