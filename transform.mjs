@@ -58,6 +58,8 @@ edit('🍌 button: import', 'src/components/navigation/AppSidebar.vue',
   'import NavHomeAssistant from "./NavHomeAssistant.vue";\nimport NavPeachBanana from "./NavPeachBanana.vue";', { max: 1 });
 
 // 4. ITS NAME in the browser tab
+edit('storage stand-in', 'index.html',   // (the Echo Show's browser refuses localStorage; this session's storage stands in, as the panel itself does)
+  '<head>', '<head>\n    <script>try{localStorage.getItem("x")}catch(e){try{Object.defineProperty(window,"localStorage",{configurable:true,get:function(){return window.sessionStorage}})}catch(x){}}</script>', { min: 1, max: 1 });
 edit('title', 'index.html', /<title>[^<]*<\/title>/, '<title>apesma</title>', { max: 1 });
 
 console.log(report.join('\n'));
