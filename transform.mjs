@@ -48,6 +48,8 @@ edit('server address: import', 'src/views/Login.vue',
   'import { useRouter } from "vue-router";', 'import { useRouter } from "vue-router";\nimport { apesmaServerBase } from "@/helpers/apesma";', { max: 1 });
 
 // 3. THE 🍌 PEACH BANANA BUTTON at the bottom of the side menu (next to the "Home Assistant" one)
+edit('server websocket', 'src/views/Login.vue',   // (the first connection: to the server's address, not this page's - the same unless apesmaDirect)
+  'const localWsUrl = getWebSocketUrlFromLocation();', 'const localWsUrl = buildWebSocketUrl(apesmaServerBase());', { min: 1, max: 1 });
 edit('🍌 button', 'src/components/navigation/AppSidebar.vue',
   '<NavHomeAssistant v-if="haState.kioskModeEnabled" />',
   '<NavPeachBanana />\n      <NavHomeAssistant v-if="haState.kioskModeEnabled" />', { max: 1 });

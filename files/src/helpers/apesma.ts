@@ -18,9 +18,25 @@ export const apesmaIngress: string | null = (() => {
   }
 })();
 
-/** The Music Assistant server's address: through HA's ingress for apesma, else where this page came from (upstream). */
+// A plain Home Assistant login (the Echo Show "Moon") can't use the ingress (admins only), so its page goes straight to
+// Music Assistant's own address (https only, e.g. https://ma.proflewis.stream) as a plain MA user: the page that opens
+// apesma puts that address in localStorage "apesma_server" and the user's MA token where this app keeps it, every time
+// it opens (that browser keeps nothing between launches).
+const DIRECT_KEY = "apesma_server";
+export const apesmaDirect: string | null = (() => {
+  if (apesmaIngress) return null;
+  try {
+    const v = localStorage.getItem(DIRECT_KEY);
+    return v && /^https:\/\/[A-Za-z0-9.-]+(:\d+)?$/.test(v) ? v : null;
+  } catch {
+    return null;
+  }
+})();
+
+/** The Music Assistant server's address: through HA's ingress, or straight to it (apesmaDirect), else where this page came from (upstream). */
 export function apesmaServerBase(): string {
   if (apesmaIngress) return window.location.origin + apesmaIngress.replace(/\/$/, "");
+  if (apesmaDirect) return apesmaDirect;
   return window.location.origin + window.location.pathname.replace(/\/$/, "");
 }
 
