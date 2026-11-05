@@ -1,0 +1,72 @@
+# BUILD APESMA - Music Assistant's web app + our changes (transform.mjs), for the version the latest Music Assistant
+# release uses. Runs every day at 02:20 (builds only when that version has no apesma release yet), rebuilds every Monday
+# anyway (fixes in the build tools), and on demand (Actions → build apesma → Run workflow; a version can be given).
+# Each build is a GitHub release "apesma-<app version>" with apesma.zip; the house fetches the one matching ITS Music
+# Assistant (device_master/apesma_update.py in the house config). A failed build changes nothing at home.
+name: build apesma
+on:
+  schedule:
+    - cron: '20 2 * * *'
+  workflow_dispatch:
+    inputs:
+      frontend:
+        description: "Music Assistant app version (tag) - blank = the one the latest Music Assistant release uses"
+        required: false
+      force:
+        description: "Rebuild even if that version was built already"
+        type: boolean
+        default: false
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Which app version
+        id: v
+        run: |
+          set -euo pipefail
+          FV="${{ inputs.frontend }}"
+          if [ -z "$FV" ]; then
+            MA=$(curl -fsSL https://api.github.com/repos/music-assistant/server/releases/latest | jq -r .tag_name)
+            FV=$(curl -fsSL "https://raw.githubusercontent.com/music-assistant/server/$MA/pyproject.toml" \
+                 | python3 -c "import re,sys;m=re.search(r'music-assistant-frontend==([0-9]+(?:\.[0-9]+)*)',sys.stdin.read());print(m.group(1))")
+            echo "Music Assistant $MA uses app $FV"
+          fi
+          echo "fv=$FV" >> "$GITHUB_OUTPUT"
+          SKIP=0
+          if gh release view "apesma-$FV" >/dev/null 2>&1 && [ "${{ inputs.force }}" != "true" ] && [ "$(date -u +%u)" != "1" -o "${{ github.event_name }}" != "schedule" ]; then SKIP=1; fi
+          echo "skip=$SKIP" >> "$GITHUB_OUTPUT"
+      - name: Fetch Music Assistant's app
+        if: steps.v.outputs.skip != '1'
+        run: git clone --depth 1 --branch "${{ steps.v.outputs.fv }}" https://github.com/music-assistant/frontend.git up
+      - name: Our changes
+        if: steps.v.outputs.skip != '1'
+        run: node transform.mjs up
+      - uses: pnpm/action-setup@v4
+        if: steps.v.outputs.skip != '1'
+        with:
+          package_json_file: up/package.json
+      - uses: actions/setup-node@v4
+        if: steps.v.outputs.skip != '1'
+        with:
+          node-version: 22
+      - name: Build
+        if: steps.v.outputs.skip != '1'
+        working-directory: up
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec vite build --base /local/apesma/
+          cp APESMA_TRANSFORM.txt dist/
+          echo "{\"app\": \"${{ steps.v.outputs.fv }}\", \"built\": \"$(date -u +%FT%TZ)\", \"commit\": \"${{ github.sha }}\"}" > dist/apesma.json
+          cd dist && zip -qr ../../apesma.zip .
+      - name: Release
+        if: steps.v.outputs.skip != '1'
+        run: |
+          TAG="apesma-${{ steps.v.outputs.fv }}"
+          NOTES="apesma for Music Assistant app ${{ steps.v.outputs.fv }}"$'\n\n'"$(cat up/APESMA_TRANSFORM.txt)"
+          if gh release view "$TAG" >/dev/null 2>&1; then gh release upload "$TAG" apesma.zip --clobber; gh release edit "$TAG" --notes "$NOTES"
+          else gh release create "$TAG" apesma.zip --title "$TAG" --notes "$NOTES"; fi
